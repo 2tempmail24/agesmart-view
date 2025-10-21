@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>AIStudio Chat — Single File</title>
+  <title>AIStudio Chat Full</title>
   <style>
     :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#4f46e5}
     body{font-family:Inter, system-ui, Arial; background:linear-gradient(180deg,#071129 0%, #0b1220 100%);color:#e6eef8;margin:0;padding:20px}
@@ -33,25 +33,21 @@
 <body>
   <div class="app">
     <header>
-      <h1>AIStudio Chat — Single HTML (প্রাথমিক)</h1>
-      <div class="small">এই ফাইলটি ক্লায়েন্ট-সাইড ডেমো; প্রোডাকশনে সার্ভার-প্রক্সি ব্যবহার করুন।</div>
+      <h1>AIStudio Chat Full</h1>
+      <div class="small">Full-feature demo with file upload & image generation</div>
     </header>
 
     <div class="controls">
       <div class="box" style="flex:1;">
-        <div class="small">API সেটিংস (প্রথমেই কনফিগার করুন)</div>
-        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
-          <!-- IMPORTANT: It's unsafe to place secret API KEYS inside client-side JS on a public site. See notes below. -->
-          <input id="apiEndpoint" placeholder="API Endpoint (e.g. https://your-proxy.example.com)" style="flex:1;padding:8px;border-radius:6px;background:#061022;border:1px solid rgba(255,255,255,0.03);color:inherit" />
-          <input id="apiKey" placeholder="(Optional) API Key for quick tests" style="width:300px;padding:8px;border-radius:6px;background:#061022;border:1px solid rgba(255,255,255,0.03);color:inherit" />
-        </div>
-        <div class="small" style="margin-top:8px">নোট: প্রোডাকশনে API_KEY ব্রাউজারে রাখবেন না — নিচে সার্ভার প্রোক্সি নমুনা দেওয়া আছে।</div>
+        <div class="small">API Settings</div>
+        <input id="apiEndpoint" type="hidden" />
+        <div class="small">নোট: প্রোডাকশনে সার্ভার-প্রক্সি ব্যবহার করুন।</div>
       </div>
 
       <div class="box" style="width:320px">
-        <div class="small">ইমেজ জেনারেট / আপলোড</div>
+        <div class="small">Generate / Upload Image</div>
         <div style="margin-top:8px;display:flex;gap:8px">
-          <input id="imgPrompt" placeholder="ইমেজ জন্য প্রম্পট লিখুন..." style="flex:1;padding:8px;border-radius:6px;background:#061022;border:1px solid rgba(255,255,255,0.03);color:inherit" />
+          <input id="imgPrompt" placeholder="ইমেজ প্রম্পট" style="flex:1;padding:8px;border-radius:6px;background:#061022;border:1px solid rgba(255,255,255,0.03);color:inherit" />
           <button id="genImage">Generate</button>
         </div>
         <div style="margin-top:8px">
@@ -78,36 +74,19 @@
     </div>
 
     <footer>
-      <div class="small">Tip: দ্রুত টেস্ট করতে আপনি <span class="kbd">API Endpoint</span>-এ একটি নোড/পিএইচপি প্রোক্সি সেট করতে পারেন।</div>
-      <div style="flex:1"></div>
-      <div class="small">Made for: আপনার অনুরোধ অনুযায়ী — single-file demo</div>
+      <div class="small">Tip: server proxy required for API key security</div>
     </footer>
-
-    <!-- Hidden template for messages -->
   </div>
 
 <script>
-/* ================= Configuration ==================
-   Replace these values or set them in the UI above.
-   SECURITY: Never commit a real API KEY into a public repo or embed it in a public site.
-
-   Recommended pattern:
-   1) Create a small server-side proxy (Node/Express or PHP) which holds your API key.
-   2) From this HTML, call that proxy (no secret in browser).
-
-   Example proxy snippet (Node/Express):
-   // ---- server.js ----
-   // const express = require('express'); const fetch = require('node-fetch');
-   // app.post('/proxy', async (req,res)=>{ const body=await req.json(); const r=await fetch('https://aistudio.google.com/your/api/path',{method:'POST',headers:{'Authorization':'Bearer '+process.env.API_KEY,'Content-Type':'application/json'},body:JSON.stringify(body)}); const data=await r.json(); res.json(data); });
-   // set process.env.API_KEY to your real key on the server only.
-*/
+// default endpoint points to local proxy
+document.getElementById('apiEndpoint').value = window.location.origin + '/api';
 
 function el(id){return document.getElementById(id)}
 const messagesEl = el('messages');
 const filesListEl = el('filesList');
 let attachedFiles = [];
 
-// Add a message to chat UI
 function addMessage(text, who='bot', meta=''){
   const d = document.createElement('div');
   d.className = 'msg ' + (who==='user' ? 'user' : 'bot');
@@ -116,7 +95,6 @@ function addMessage(text, who='bot', meta=''){
   messagesEl.scrollTop = messagesEl.scrollHeight;
 }
 
-// File attach handling
 el('fileUpload').addEventListener('change', e=>{
   const files = Array.from(e.target.files);
   for(const f of files){
@@ -127,135 +105,61 @@ el('fileUpload').addEventListener('change', e=>{
   }
 });
 
-// Image upload preview
 el('imageUpload').addEventListener('change', async e=>{
   const f = e.target.files[0]; if(!f) return;
   const url = URL.createObjectURL(f);
   el('uploadedPreview').innerHTML = `<img src="${url}" class="img-preview" />`;
-  // Optionally attach the image to outgoing files
   attachedFiles.push(f);
   const item = document.createElement('div'); item.className='file-item'; item.textContent = f.name + ' (image)'; filesListEl.appendChild(item);
 });
 
-// Send message (text + files)
 async function sendMessage(){
   const text = el('userInput').value.trim();
   if(!text && attachedFiles.length===0) return;
   addMessage(escapeHtml(text||'(file)'),'user');
   el('userInput').value='';
 
-  // Build form data if files exist, else JSON
-  const endpoint = el('apiEndpoint').value || '';
-  const apiKey = el('apiKey').value || '';
-  if(!endpoint){ addMessage('<span class="small">Error: API Endpoint সেট করা নেই — উপরে দিন।</span>','bot'); return; }
+  const endpoint = el('apiEndpoint').value;
+  if(!endpoint){ addMessage('<span class="small">Error: API Endpoint নেই</span>','bot'); return; }
 
   try{
-    // Simple heuristic: if files present use multipart/form-data and POST to /upload; else JSON to /chat
     if(attachedFiles.length>0){
       const fd = new FormData();
       fd.append('message', text);
       attachedFiles.forEach((f,i)=> fd.append('file'+i, f));
-      const resp = await fetch(endpoint + '/upload', {
-        method:'POST', headers: apiKey?{ 'X-API-KEY': apiKey }:{}, body: fd
-      });
+      const resp = await fetch(endpoint + '/upload', {method:'POST', body: fd});
       const data = await resp.json();
       addMessage(escapeHtml(JSON.stringify(data).slice(0,200)),'bot','(response preview)');
-      attachedFiles = []; filesListEl.innerHTML='';
+      attachedFiles=[]; filesListEl.innerHTML='';
     } else {
       const body = {message:text}
-      const resp = await fetch(endpoint + '/chat', {
-        method:'POST', headers: Object.assign({'Content-Type':'application/json'}, apiKey?{ 'X-API-KEY': apiKey }:{}), body: JSON.stringify(body)
-      });
+      const resp = await fetch(endpoint + '/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
       const data = await resp.json();
-      // Expect server to return {reply: '...'} or similar
-      const reply = typeof data === 'string' ? data : (data.reply || JSON.stringify(data));
+      const reply = typeof data==='string'?data:(data.reply||JSON.stringify(data));
       addMessage(escapeHtml(reply),'bot');
     }
-  }catch(err){
-    addMessage('<span class="small">Error: '+escapeHtml(err.message)+'</span>','bot');
-  }
+  }catch(err){ addMessage('<span class="small">Error: '+escapeHtml(err.message)+'</span>','bot'); }
 }
 
 el('sendBtn').addEventListener('click', sendMessage);
 el('clearBtn').addEventListener('click', ()=>{messagesEl.innerHTML=''; filesListEl.innerHTML=''; attachedFiles=[]});
+el('userInput').addEventListener('keydown', e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
 
-el('userInput').addEventListener('keydown', e=>{
-  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
-});
-
-// Generate image button (calls endpoint /generate-image with {prompt})
 el('genImage').addEventListener('click', async ()=>{
   const prompt = el('imgPrompt').value.trim(); if(!prompt) return;
   addMessage('Generating image for: '+escapeHtml(prompt),'user');
-  const endpoint = el('apiEndpoint').value || '';
-  const apiKey = el('apiKey').value || '';
-  if(!endpoint){ addMessage('<span class="small">Error: API Endpoint সেট করা নেই — উপরে দিন।</span>','bot'); return; }
+  const endpoint = el('apiEndpoint').value;
   try{
-    const resp = await fetch(endpoint + '/generate-image', {method:'POST', headers: Object.assign({'Content-Type':'application/json'}, apiKey?{ 'X-API-KEY': apiKey }:{}), body: JSON.stringify({prompt})});
+    const resp = await fetch(endpoint + '/generate-image', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prompt})});
     const data = await resp.json();
-    // Expect {image_url: 'https://...'} or {image_base64: '...'}
-    if(data.image_url){
-      addMessage(`<div><img src="${data.image_url}" class="img-preview" /></div>`,'bot');
-    } else if(data.image_base64){
-      addMessage(`<div><img src="data:image/png;base64,${data.image_base64}" class="img-preview" /></div>`,'bot');
-    } else {
-      addMessage('<span class="small">No image returned. Response: '+escapeHtml(JSON.stringify(data))+'</span>','bot');
-    }
+    if(data.image_url){ addMessage(`<div><img src="${data.image_url}" class="img-preview" /></div>`,'bot'); }
+    else if(data.image_base64){ addMessage(`<div><img src="data:image/png;base64,${data.image_base64}" class="img-preview" /></div>`,'bot'); }
+    else{ addMessage('<span class="small">No image returned</span>','bot'); }
   }catch(err){ addMessage('<span class="small">Generation error: '+escapeHtml(err.message)+'</span>','bot'); }
 });
 
-// Simple HTML escaper
-function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"]+/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m])); }
-
+function escapeHtml(s){if(!s) return ''; return String(s).replace(/[&<>"]+/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
 </script>
-
-<!--
-  ===== Usage notes (বাংলা) =====
-  1) এই HTML ফাইলটি ডাউনলোড করুন এবং ব্রাউজারে খুলুন (local file testing ok).
-  2) "API Endpoint" হিসেবে আপনার সার্ভার-প্রক্সি দিন — উদাহরণ: https://example.com/api
-  3) সার্ভার-প্রক্সি (না-খোলামেলা) আপনার প্রকৃত AIStudio/Google API KEY ব্যবহার করে অনুরোধগুলি ফরোয়ার্ড করবে।
-  4) দ্রুত টেস্ট: যদি আপনি কেবল প্রটোটাইপ বানাতে চান এবং আপনার API KEY ছোট পরিসরে ব্যবহার করবেন, আপনি "API Key" ইনপুটে কী রাখতে পারেন — কিন্তু সতর্ক থাকুন।
-
-  ===== Example Node/Express proxy (copy to server, DO NOT RUN IN BROWSER) =====
-  const express = require('express');
-  const fetch = require('node-fetch');
-  const app = express();
-  app.use(express.json());
-  const API_KEY = process.env.AISTUDIO_KEY; // set this in server env only
-
-  app.post('/api/chat', async (req,res)=>{
-    const body = req.body;
-    // adapt path & payload to the real AIStudio API you want to use
-    const r = await fetch('https://aistudio.google.com/v1/chat:send', {
-      method:'POST',
-      headers:{ 'Authorization':'Bearer '+API_KEY,'Content-Type':'application/json' },
-      body: JSON.stringify({ message: body.message })
-    });
-    const data = await r.json(); res.json(data);
-  });
-
-  app.post('/api/generate-image', async (req,res)=>{
-    const {prompt} = req.body;
-    const r = await fetch('https://aistudio.google.com/v1/images:generate', {
-      method:'POST', headers:{ 'Authorization':'Bearer '+API_KEY,'Content-Type':'application/json'}, body: JSON.stringify({prompt})
-    }); const data = await r.json(); res.json(data);
-  });
-
-  app.post('/api/upload', async (req,res)=>{
-    // implement file parsing (multer) and forward file bytes to storage or API
-    res.json({ok:true});
-  });
-
-  app.listen(3000,()=>console.log('proxy listening'));
-
-  ===========================================================
-  If you want, I can also generate:
-   - a ready-to-run Node/Express proxy file (server.js) + package.json,
-   - or a small PHP proxy script,
-   - OR convert this single-file HTML into a prettier React + Tailwind page.
-
-  আপনি যদি চান, আমি আপনার দেওয়া API KEY (যেমন: AIzaSyA8asDbCbp3K1e5AiEkBTEEayF_fA_mxPI) দিয়ে ক্লায়েন্ট-সাইড ডেমো কোডও কাস্টমাইজ করে দেব — কিন্তু নিরাপত্তার কারণে আমি অনুরোধ করব: প্রোডাকশনে সার্ভার-প্রক্সি সেট করুন।
--->
 
 </body>
 </html>
