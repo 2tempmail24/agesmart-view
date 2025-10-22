@@ -1,292 +1,291 @@
-import React, { useEffect, useState } from "react";
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IPWhois — Attractive IP / Geo Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" integrity="sha512-somehash" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-somehash" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-// IPWhois Dashboard - Single-file React component
-// - Uses ipwho.is public API to show full details for an IP or current visitor
-// - Tailwind CSS classes used for styling (make sure Tailwind is configured in your project)
-// - Default export a React component so you can drop this into a Vite/CRA/Next page
-
-export default function IPWhoisDashboard() {
-  const [ipInput, setIpInput] = useState("");
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showRaw, setShowRaw] = useState(false);
-  const [queryHistory, setQueryHistory] = useState([]);
-
-  // helper: fetch ipwho.is for given ip or blank for requester
-  async function fetchIP(ip = "") {
-    setLoading(true);
-    setError("");
-    try {
-      const res = await fetch(`https://ipwho.is/${ip}`);
-      const json = await res.json();
-      if (!json || json.success === false) {
-        throw new Error(json.message || "No data returned");
-      }
-      setData(json);
-
-      setQueryHistory((h) => {
-        const item = { ip: json.ip || ip, at: new Date().toISOString() };
-        const next = [item, ...h].slice(0, 10);
-        localStorage.setItem("ipwho_history", JSON.stringify(next));
-        return next;
-      });
-    } catch (e) {
-      setError(e.message || String(e));
-      setData(null);
-    } finally {
-      setLoading(false);
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#7c5cff; --glass: rgba(255,255,255,0.03);
+      --success:#2dd4bf; --danger:#ff6b6b; --glass-2: rgba(255,255,255,0.02);
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
     }
-  }
+    *{box-sizing:border-box}
+    body{margin:0; background:linear-gradient(180deg,#071027 0%, #081426 60%); color:#e6eef8;}
+    .wrap{max-width:1200px;margin:28px auto;padding:22px}
+    header{display:flex;align-items:center;gap:16px}
+    .logo{display:flex;align-items:center;gap:12px}
+    .logo .mark{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#00c6ff);display:flex;align-items:center;justify-content:center;font-weight:800;color:white}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
 
-  useEffect(() => {
-    // load history
-    try {
-      const h = JSON.parse(localStorage.getItem("ipwho_history") || "[]");
-      setQueryHistory(h);
-    } catch (e) {}
+    .grid{display:grid;grid-template-columns:1fr 380px;gap:18px;margin-top:18px}
 
-    // auto-fetch current visitor IP on mount
-    fetchIP();
-  }, []);
+    .card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 8px 30px rgba(2,6,23,0.6);}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .stat{flex:1;min-width:180px;background:linear-gradient(180deg,var(--glass),var(--glass-2));border-radius:10px;padding:12px}
+    .stat small{display:block;color:var(--muted);font-size:12px}
+    .stat h3{margin:6px 0 0;font-size:16px}
 
-  // utility: human-friendly JSON download
-  function downloadJSON() {
-    if (!data) return;
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ipwho_${data.ip || "unknown"}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
+    #map{height:320px;border-radius:10px;overflow:hidden}
 
-  // Checks: timezone correctness, browser info, and simple heuristics
-  function checkTimezone(apiTz) {
-    if (!apiTz) return { ok: null, note: "No timezone in API" };
-    const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (!browserTz) return { ok: null, note: "Could not detect browser timezone" };
-    const ok = browserTz === apiTz;
-    return { ok, browserTz };
-  }
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:8px 10px;text-align:left;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    th{color:var(--muted);font-weight:600}
 
-  function getBrowserInfo() {
-    const ua = navigator.userAgent || "";
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "(unknown)";
-    return { ua, tz };
-  }
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .btn{background:linear-gradient(90deg,var(--accent),#00c6ff);border:none;color:white;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+    .muted{color:var(--muted)}
 
-  // small pretty field component
-  function Field({ label, value }) {
-    return (
-      <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-6">
-        <div className="text-xs text-slate-400 w-36 sm:w-40">{label}</div>
-        <div className="text-sm font-medium break-words">{value ?? "—"}</div>
+    pre{background:#021024;padding:12px;border-radius:8px;overflow:auto;max-height:300px}
+
+    footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+
+    /* responsive */
+    @media (max-width:980px){.grid{grid-template-columns:1fr 1fr} .wrap{padding:12px}}
+    @media (max-width:720px){.grid{grid-template-columns:1fr} #map{height:240px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">
+        <div class="mark">IP</div>
+        <div>
+          <h1>IPWhois Dashboard</h1>
+          <p class="lead">IP অনলাইন ইনফো — লোকেশন, আইএসপি, টাইমজোন ও ব্রাউজার স্ট্যাটাস সহ একটি আকর্ষণীয় ড্যাশবোর্ড</p>
+        </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100 p-6">
-      <div className="max-w-6xl mx-auto">
-        <header className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight">IPWhois Dashboard</h1>
-            <p className="text-sm text-slate-400 mt-1">Beautiful, complete view using <span className="font-medium">ipwho.is</span> — enter an IP or inspect your current connection.</p>
-          </div>
-          <div className="flex gap-2">
-            <input
-              aria-label="IP or hostname"
-              value={ipInput}
-              onChange={(e) => setIpInput(e.target.value)}
-              placeholder="Enter IP or leave blank for current"
-              className="px-3 py-2 rounded-md bg-slate-700 text-slate-100 placeholder:text-slate-400 outline-none"
-            />
-            <button
-              onClick={() => fetchIP(ipInput.trim())}
-              className="px-4 py-2 rounded-md bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold"
-            >
-              {loading ? "Loading..." : "Lookup"}
-            </button>
-            <button
-              onClick={() => { setIpInput(""); fetchIP(); }}
-              className="px-3 py-2 rounded-md bg-slate-600 hover:bg-slate-500 text-slate-100"
-            >
-              My IP
-            </button>
-          </div>
-        </header>
-
-        <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <section className="lg:col-span-2 bg-slate-900/60 p-5 rounded-2xl shadow-2xl">
-            <div className="flex items-start justify-between mb-4">
-              <h2 className="text-lg font-semibold">Overview</h2>
-              <div className="flex items-center gap-2">
-                <button onClick={() => setShowRaw(s => !s)} className="text-sm px-3 py-1 rounded bg-slate-800">{showRaw ? 'Hide raw' : 'Show raw'}</button>
-                <button onClick={downloadJSON} disabled={!data} className="text-sm px-3 py-1 rounded bg-slate-800">Download JSON</button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-700/40 rounded">Error: {error}</div>
-            )}
-
-            {!data && !error && (
-              <div className="p-6 text-slate-400">No data yet — try "Lookup" or press "My IP".</div>
-            )}
-
-            {data && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-slate-800/40 to-slate-800/10">
-                    <h3 className="text-sm text-slate-300">IP & Network</h3>
-                    <div className="mt-3 space-y-2">
-                      <Field label="IP" value={data.ip} />
-                      <Field label="Type" value={data.type} />
-                      <Field label="Hostname" value={data.hostname} />
-                      <Field label="ASN" value={(data.connection && data.connection.asn) || data.asn || '—'} />
-                      <Field label="ISP" value={data.connection?.isp || data.org || data.isp || '—'} />
-                      <Field label="Connection" value={data.connection?.type || data.connection?.org || '—'} />
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-slate-800/40 to-slate-800/10">
-                    <h3 className="text-sm text-slate-300">Location</h3>
-                    <div className="mt-3 space-y-2">
-                      <Field label="Continent" value={data.continent || `${data.continent_code || ''}`} />
-                      <Field label="Country" value={`${data.country || ''} ${data.country_flag || ''}`} />
-                      <Field label="Region" value={`${data.region || ''} (${data.region_code || ''})`} />
-                      <Field label="City" value={data.city} />
-                      <Field label="Latitude / Longitude" value={`${data.latitude ?? '—'} / ${data.longitude ?? '—'}`} />
-                      <Field label="Postal" value={data.postal || '—'} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-xl bg-slate-800/20">
-                    <h4 className="text-xs text-slate-300">Timezone</h4>
-                    <div className="mt-3 space-y-2">
-                      <Field label="Name" value={data.timezone?.id} />
-                      <Field label="Offset (UTC)" value={data.timezone?.utc} />
-                      <Field label="Current Time" value={data.timezone?.current_time} />
-                      <Field label="Is DST" value={String(data.timezone?.is_dst ?? '—')} />
-                      <div className="mt-2">
-                        {(() => {
-                          const check = checkTimezone(data.timezone?.id);
-                          if (!check || !check.browserTz) return <div className="text-sm text-slate-400">Browser timezone: {getBrowserInfo().tz}</div>;
-                          return (
-                            <div className="text-sm">
-                              <div>Browser timezone: <span className="font-medium">{check.browserTz}</span></div>
-                              <div>Matches API timezone: <span className={`ml-2 font-semibold ${check.ok ? 'text-emerald-400' : 'text-amber-400'}`}>{check.ok ? 'Yes' : 'No'}</span></div>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-800/20">
-                    <h4 className="text-xs text-slate-300">Currency</h4>
-                    <div className="mt-3 space-y-2">
-                      <Field label="Name" value={data.currency?.name} />
-                      <Field label="Code" value={data.currency?.code} />
-                      <Field label="Symbol" value={data.currency?.symbol} />
-                      <Field label="Rate (to USD)" value={data.currency?.exchange_rate ? `1 ${data.currency?.code} ≈ ${data.currency?.exchange_rate} USD` : '—'} />
-                      <div className="text-xs text-slate-400 mt-2">Note: exchange_rate is provided by ipwho.is when available. For live FX use a dedicated FX API.</div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-800/20">
-                    <h4 className="text-xs text-slate-300">Browser & Client</h4>
-                    <div className="mt-3 space-y-2">
-                      <Field label="User agent" value={getBrowserInfo().ua} />
-                      <Field label="Detected TZ (browser)" value={getBrowserInfo().tz} />
-                      <Field label="Cookies enabled" value={navigator.cookieEnabled ? 'Yes' : 'No'} />
-                      <Field label="Do Not Track" value={navigator.doNotTrack || '—'} />
-                      <Field label="Language" value={navigator.language || navigator.languages?.[0] || '—'} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 p-4 rounded-xl bg-gradient-to-r from-slate-800/40 to-slate-800/10">
-                  <h4 className="text-sm text-slate-300 mb-2">Map preview</h4>
-                  <div className="rounded-md overflow-hidden border border-slate-700">
-                    {data.latitude && data.longitude ? (
-                      <iframe
-                        title="map"
-                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${data.longitude - 0.05}%2C${data.latitude - 0.03}%2C${data.longitude + 0.05}%2C${data.latitude + 0.03}&layer=mapnik&marker=${data.latitude}%2C${data.longitude}`}
-                        className="w-full h-64"
-                      />
-                    ) : (
-                      <div className="p-8 text-center text-slate-400">Location coordinates not available to render map.</div>
-                    )}
-                  </div>
-                </div>
-
-                {showRaw && (
-                  <pre className="mt-4 p-3 rounded bg-slate-900 text-sm overflow-auto max-h-80">{JSON.stringify(data, null, 2)}</pre>
-                )}
-
-              </div>
-            )}
-          </section>
-
-          <aside className="bg-slate-900/60 p-5 rounded-2xl shadow-2xl">
-            <h3 className="text-lg font-semibold mb-3">Quick Tools</h3>
-
-            <div className="space-y-3">
-              <div className="p-3 rounded bg-slate-800/40">
-                <div className="text-xs text-slate-400">Recent lookups</div>
-                <div className="mt-2 space-y-2">
-                  {queryHistory.length === 0 && <div className="text-sm text-slate-400">No recent lookups</div>}
-                  {queryHistory.map((q, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                      <div>{q.ip}</div>
-                      <div className="flex gap-2">
-                        <button onClick={() => fetchIP(q.ip)} className="px-2 py-1 rounded text-xs bg-slate-700">Re-open</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-3 rounded bg-slate-800/40">
-                <div className="text-xs text-slate-400">Tools</div>
-                <div className="mt-2 flex flex-col gap-2">
-                  <button onClick={() => { navigator.clipboard && data && navigator.clipboard.writeText(JSON.stringify(data)); }} className="px-3 py-2 rounded bg-slate-700 text-sm">Copy JSON to clipboard</button>
-                  <button onClick={() => setShowRaw(s => !s)} className="px-3 py-2 rounded bg-slate-700 text-sm">Toggle raw view</button>
-                  <button onClick={() => { localStorage.removeItem('ipwho_history'); setQueryHistory([]); }} className="px-3 py-2 rounded bg-red-700 text-sm">Clear history</button>
-                </div>
-              </div>
-
-              <div className="p-3 rounded bg-slate-800/40">
-                <div className="text-xs text-slate-400">Diagnostics</div>
-                <div className="mt-2 text-sm text-slate-300">
-                  <div>Latency test: {data ? `${Math.round((new Date().getTime() % 1000))} ms (client-side rough)` : '—'}</div>
-                  <div>API status: {data ? 'OK' : 'Unknown'}</div>
-                  <div className="text-xs text-slate-400 mt-2">Tip: If some fields are missing, ipwho.is may not have them for that IP or the service could be limited.</div>
-                </div>
-              </div>
-
-              <div className="p-3 rounded bg-slate-800/40">
-                <div className="text-xs text-slate-400">Share / Embed</div>
-                <div className="mt-2 text-sm">
-                  <div>Permalink example:</div>
-                  <div className="mt-2 text-xs text-slate-400">Yoursite.com/ip?ip={data?.ip}</div>
-                </div>
-              </div>
-
-            </div>
-
-          </aside>
-        </main>
-
-        <footer className="mt-8 text-center text-slate-400 text-sm">Built with ❤️ using <span className="font-medium">ipwho.is</span>. Customize colors and layout in Tailwind as needed.</footer>
+      <div style="margin-left:auto;text-align:right">
+        <div class="muted">Built with <i class="fab fa-js"></i> Fetch • <i class="fas fa-map-marker-alt"></i> Leaflet</div>
       </div>
+    </header>
+
+    <div style="height:18px"></div>
+
+    <div class="grid">
+      <div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h2 style="margin:0">IP ও লোকেশন ইনফর্মেশন</h2>
+              <div class="muted" style="font-size:13px;margin-top:4px">ipwho.is API থেকে ডেটা নিয়ে সুন্দরভাবে প্রদর্শন</div>
+            </div>
+            <div class="controls">
+              <input id="ipInput" placeholder="ছেড়ে দিন হলে স্বয়ংক্রিয় হবে (example: 1.2.3.4)" style="padding:8px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.04);color:inherit" />
+              <button class="btn" id="fetchBtn">Get Info</button>
+              <button class="btn ghost" id="copyJSON">Copy JSON</button>
+            </div>
+          </div>
+
+          <div style="height:14px"></div>
+
+          <div class="row" id="topStats">
+            <div class="stat"><small>IP</small><h3 id="ipVal">—</h3></div>
+            <div class="stat"><small>Country</small><h3 id="countryVal">—</h3></div>
+            <div class="stat"><small>City</small><h3 id="cityVal">—</h3></div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <h4 style="margin:6px 0 8px">Detailed info</h4>
+              <table id="infoTable">
+                <tbody>
+                  <!-- dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+            <div>
+              <h4 style="margin:6px 0 8px">Browser & Client</h4>
+              <table>
+                <tbody>
+                  <tr><th>Browser</th><td id="browserName">—</td></tr>
+                  <tr><th>User Agent</th><td id="userAgent">—</td></tr>
+                  <tr><th>Platform</th><td id="platform">—</td></tr>
+                  <tr><th>Cookies Enabled</th><td id="cookies">—</td></tr>
+                  <tr><th>Online</th><td id="online">—</td></tr>
+                  <tr><th>Local Time</th><td id="localTime">—</td></tr>
+                </tbody>
+              </table>
+
+              <div style="height:10px"></div>
+              <h4 style="margin:6px 0 8px">Timezone check</h4>
+              <div id="tzCheck">—</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="card">
+          <h4 style="margin:0 0 8px">Raw API JSON</h4>
+          <pre id="rawJSON">{ }</pre>
+          <div style="height:12px"></div>
+          <button class="btn ghost" id="downloadJSON">Download JSON</button>
+        </div>
+
+      </div>
+
+      <aside>
+        <div class="card">
+          <h4 style="margin:0 0 8px">Map & Quick</h4>
+          <div id="map"></div>
+          <div style="height:12px"></div>
+          <div class="row">
+            <div class="stat"><small>Latitude</small><h3 id="lat">—</h3></div>
+            <div class="stat"><small>Longitude</small><h3 id="lon">—</h3></div>
+          </div>
+
+          <div style="height:12px"></div>
+          <h4 style="margin:6px 0 8px">Checks</h4>
+          <table>
+            <tbody>
+              <tr><th>Timezone matches</th><td id="tzMatch">—</td></tr>
+              <tr><th>ISP</th><td id="isp">—</td></tr>
+              <tr><th>ASN</th><td id="asn">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="card">
+          <h4 style="margin:0 0 8px">Useful Links</h4>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <a class="btn ghost" href="#" id="openIpWho">Open ipwho.is</a>
+            <a class="btn ghost" href="https://ipwho.is/" target="_blank">ipwho.is docs</a>
+          </div>
+        </div>
+
+      </aside>
     </div>
-  );
-}
+
+    <footer>
+      <div>প্রতিক্রিয়া বা উন্নতির জন্য জানাবেন — Designed by you + IPWhois API</div>
+    </footer>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" integrity="sha512-somehash" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    // Helper render
+    const el = id => document.getElementById(id);
+    const apiBase = 'https://ipwho.is';
+
+    // Initialize map
+    const map = L.map('map', {attributionControl:false}).setView([23.8,90.4], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+    let marker = L.marker([0,0]).addTo(map);
+
+    function formatDateISO(ts){
+      try{const d=new Date(ts*1000); return d.toLocaleString();}catch(e){return '-'}
+    }
+
+    function renderInfo(data){
+      el('ipVal').textContent = data.ip || '—';
+      el('countryVal').textContent = (data.country && data.country) || '—';
+      el('cityVal').textContent = data.city || '—';
+      el('lat').textContent = data.latitude ?? '—';
+      el('lon').textContent = data.longitude ?? '—';
+      el('isp').textContent = data.connection?.isp || data.org || '—';
+      el('asn').textContent = data.connection?.asn || data.asn || '—';
+
+      // populate table with many fields
+      const tbody = el('infoTable').querySelector('tbody'); tbody.innerHTML='';
+      const rows = {
+        'IP': data.ip, 'Type': data.type, 'Continent': data.continent, 'Region': data.region, 'City': data.city,
+        'Postal': data.postal, 'Latitude': data.latitude, 'Longitude': data.longitude, 'Capital': data.country_capital,
+        'Country Code': data.country_code, 'Calling Code': data.country_phone, 'Currency': data.currency?.code + ' (' + (data.currency?.name||'') + ')',
+        'ISP / Org': data.connection?.isp || data.org, 'ASN': data.connection?.asn || data.asn, 'Threat': JSON.stringify(data.threat || {}),
+        'Timezone (API)': data.timezone?.id || data.timezone, 'Timezone Offset (API)': data.timezone?.offset, 'Timezone Current Time': data.timezone?.current_time || data.timezone?.utc
+      };
+      for(const k in rows){
+        const tr = document.createElement('tr');
+        const th = document.createElement('th'); th.textContent=k; const td=document.createElement('td'); td.textContent = rows[k] ?? '—';
+        tr.appendChild(th); tr.appendChild(td); tbody.appendChild(tr);
+      }
+
+      // raw json
+      el('rawJSON').textContent = JSON.stringify(data, null, 2);
+      marker.setLatLng([data.latitude || 0, data.longitude || 0]);
+      map.setView([data.latitude || 0, data.longitude || 0], data.latitude?8:2);
+
+      // timezone compare
+      const browserOffset = -new Date().getTimezoneOffset()/60; // hours
+      const apiTz = (data.timezone && data.timezone.offset) ? Number(data.timezone.offset) : null;
+      const tzMatchEl = el('tzMatch');
+      if(apiTz===null){ tzMatchEl.textContent='Unknown'; tzMatchEl.style.color='var(--muted)'; }
+      else{
+        const diff = Math.abs(apiTz - browserOffset);
+        tzMatchEl.textContent = (diff<0.5) ? 'Yes' : `No (browser: ${browserOffset}, api: ${apiTz})`;
+        tzMatchEl.style.color = (diff<0.5)?'var(--success)':'var(--danger)';
+      }
+
+      // tzCheck
+      const localTime = new Date(); el('localTime').textContent = localTime.toLocaleString();
+      el('tzCheck').innerHTML = `<div class="muted">Browser tz offset: ${browserOffset} hrs</div>`;
+    }
+
+    function renderClientInfo(){
+      el('browserName').textContent = navigator.appName || '—';
+      el('userAgent').textContent = navigator.userAgent || '—';
+      el('platform').textContent = navigator.platform || '—';
+      el('cookies').textContent = navigator.cookieEnabled ? 'Yes' : 'No';
+      el('online').textContent = navigator.onLine ? 'Online' : 'Offline';
+      el('localTime').textContent = new Date().toLocaleString();
+    }
+
+    async function fetchIP(ip){
+      try{
+        const url = ip ? `${apiBase}/${encodeURIComponent(ip)}` : apiBase;
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('Fetch failed');
+        const data = await res.json();
+        if(!data.success && data.success!==undefined) {
+          alert('API returned error: ' + (data.message||JSON.stringify(data)) );
+        }
+        renderInfo(data);
+        currentData = data;
+      }catch(err){
+        console.error(err); alert('Error fetching API. Open console for details.');
+      }
+    }
+
+    // events
+    el('fetchBtn').addEventListener('click', ()=>{ const v=el('ipInput').value.trim(); fetchIP(v?v:null); });
+    el('ipInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ el('fetchBtn').click(); }});
+
+    let currentData = {};
+    el('copyJSON').addEventListener('click', ()=>{
+      navigator.clipboard.writeText(JSON.stringify(currentData, null, 2)).then(()=>{
+        alert('JSON copied to clipboard');
+      }).catch(()=>alert('Copy failed'));
+    });
+
+    el('downloadJSON').addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(currentData, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download = `ipwhois-${currentData.ip || 'anonymous'}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    });
+
+    // open link
+    el('openIpWho').addEventListener('click', (e)=>{ e.preventDefault(); const ip = currentData.ip || ''; window.open(`https://ipwho.is/${ip}`,'_blank'); });
+
+    // initial render
+    renderClientInfo();
+    fetchIP();
+
+    // update clock every 30s
+    setInterval(()=>{ renderClientInfo(); }, 30000);
+  </script>
+</body>
+</html>
