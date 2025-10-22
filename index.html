@@ -1,165 +1,359 @@
 <!doctype html>
 <html lang="bn">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>AIStudio Chat Full</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>IP Diagnostics Toolkit — HTML Version</title>
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--muted:#9aa4b2;--accent:#4f46e5}
-    body{font-family:Inter, system-ui, Arial; background:linear-gradient(180deg,#071129 0%, #0b1220 100%);color:#e6eef8;margin:0;padding:20px}
-    .app{max-width:1000px;margin:12px auto;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:12px;box-shadow:0 6px 24px rgba(2,6,23,0.6)}
-    header{display:flex;align-items:center;gap:12px}
-    h1{font-size:20px;margin:0}
-    .controls{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-    .box{background:var(--card);padding:14px;border-radius:10px}
-    .chat{height:480px;overflow:auto;padding:12px;background:rgba(255,255,255,0.01);border-radius:8px;margin-top:12px}
-    .msg{padding:10px;border-radius:8px;margin-bottom:8px;max-width:85%}
-    .user{background:linear-gradient(90deg,#0ea5a4,#06b6d4);color:#001;align-self:flex-end}
-    .bot{background:rgba(255,255,255,0.03)}
-    .row{display:flex;gap:8px;align-items:center}
-    textarea{width:100%;min-height:60px;padding:10px;border-radius:8px;background:#061022;border:1px solid rgba(255,255,255,0.03);color:inherit}
-    button{background:var(--accent);border:0;padding:10px 14px;border-radius:8px;color:#fff;cursor:pointer}
-    input[type=file]{color:var(--muted)}
-    .small{font-size:13px;color:var(--muted)}
-    .files-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
-    .file-item{background:rgba(255,255,255,0.02);padding:8px;border-radius:6px;font-size:13px}
-    .img-preview{max-width:160px;border-radius:6px;margin-top:8px}
-    footer{margin-top:12px;display:flex;gap:8px;align-items:center}
-    .danger{background:#b91c1c}
-    .muted-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
-    .kbd{background:#071226;padding:4px 6px;border-radius:6px;font-size:12px}
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#10b981; --danger:#ef4444;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial;background:linear-gradient(180deg,var(--bg),#071026);color:#e6eef6}
+    .wrap{max-width:1100px;margin:24px auto;padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+    h1{margin:0;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    .controls{display:flex;gap:8px;align-items:center}
+    input[type=text]{background:var(--card);border:1px solid rgba(255,255,255,0.04);padding:10px 12px;border-radius:8px;color:inherit;min-width:260px}
+    button{background:var(--accent);border:none;padding:9px 12px;border-radius:8px;color:#042018;font-weight:600;cursor:pointer}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:16px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .section-title{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .field{display:flex;gap:8px;align-items:flex-start;padding:6px 0}
+    .fkey{min-width:140px;color:var(--muted);font-size:13px}
+    .fval{font-weight:600;font-size:13px;word-break:break-word}
+    pre.raw{background:#010417;padding:10px;border-radius:8px;overflow:auto;color:#cfe8ff;font-size:12px}
+    .small{font-size:12px;color:var(--muted)}
+    .pill{display:inline-block;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:12px}
+    iframe.map{width:100%;height:260px;border:0;border-radius:8px}
+    .tools{display:flex;gap:8px;flex-wrap:wrap}
+    .list{margin:0;padding:0;list-style:none}
+    .list li{padding:6px 0;border-bottom:1px dashed rgba(255,255,255,0.02);font-size:13px}
+    .danger{color:var(--danger)}
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+    .badge{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;font-size:12px}
+    @media(max-width:880px){.grid{grid-template-columns:1fr;}.controls{flex-direction:column;align-items:stretch} input[type=text]{width:100%}}
   </style>
 </head>
 <body>
-  <div class="app">
+  <div class="wrap">
     <header>
-      <h1>AIStudio Chat Full</h1>
-      <div class="small">Full-feature demo with file upload & image generation</div>
+      <div>
+        <h1>IP Diagnostics Toolkit (HTML)</h1>
+        <p class="lead">ipwho.is + WebRTC + DoH + Evercookie-style tests + port checks — ব্রাউজার-ভিত্তিক best-effort সংস্করণ।</p>
+      </div>
+      <div class="controls">
+        <input id="ipInput" type="text" placeholder="Enter IP (e.g. 67.101.5.230) or leave blank for your IP" />
+        <button id="lookupBtn">Lookup</button>
+        <button id="myIpBtn" class="ghost">My IP</button>
+      </div>
     </header>
 
-    <div class="controls">
-      <div class="box" style="flex:1;">
-        <div class="small">API Settings</div>
-        <input id="apiEndpoint" type="hidden" />
-        <div class="small">নোট: প্রোডাকশনে সার্ভার-প্রক্সি ব্যবহার করুন।</div>
+    <div class="grid">
+      <div>
+        <section class="card" id="overviewCard">
+          <div class="section-title">Overview</div>
+          <div id="status" class="small">No lookup yet.</div>
+
+          <div id="ipDetails" style="margin-top:12px;display:none">
+            <div class="row">
+              <div style="flex:1">
+                <div class="section-title">IP & Network</div>
+                <div class="field"><div class="fkey">IP</div><div class="fval" id="ipVal">—</div></div>
+                <div class="field"><div class="fkey">Hostname</div><div class="fval" id="hostnameVal">—</div></div>
+                <div class="field"><div class="fkey">ISP / Org</div><div class="fval" id="ispVal">—</div></div>
+                <div class="field"><div class="fkey">AS Number</div><div class="fval" id="asnVal">—</div></div>
+                <div class="field"><div class="fkey">IP Range</div><div class="fval" id="rangeVal">—</div></div>
+              </div>
+
+              <div style="width:320px">
+                <div class="section-title">Location & Time</div>
+                <div class="field"><div class="fkey">Country / ISO</div><div class="fval" id="countryVal">—</div></div>
+                <div class="field"><div class="fkey">Region / City</div><div class="fval" id="regionVal">—</div></div>
+                <div class="field"><div class="fkey">ZIP</div><div class="fval" id="zipVal">—</div></div>
+                <div class="field"><div class="fkey">Lat / Lon</div><div class="fval" id="latlonVal">—</div></div>
+                <div class="field"><div class="fkey">Timezone</div><div class="fval" id="tzVal">—</div></div>
+                <div class="field"><div class="fkey">Local system time</div><div class="fval" id="sysTime">—</div></div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px" class="section-title">Map preview</div>
+            <div id="mapWrap"><div class="small">Map will appear after lookup if lat/lon available.</div></div>
+
+            <div style="margin-top:12px" class="section-title">Raw JSON</div>
+            <pre id="rawJson" class="raw" style="display:none"></pre>
+          </div>
+        </section>
+
+        <section class="card" style="margin-top:12px">
+          <div class="section-title">Interactive Tests</div>
+          <div class="tools" style="margin:8px 0 10px 0">
+            <button id="webrtcBtn" class="ghost">Run WebRTC Leak Test</button>
+            <button id="dnsBtn" class="ghost">Run DNS Leak (DoH) Test</button>
+            <button id="storageBtn" class="ghost">Run Evercookie-style Test</button>
+            <button id="portBtn" class="ghost">Quick Port Scan</button>
+            <button id="rawBtn" class="ghost">Toggle Raw JSON</button>
+          </div>
+
+          <div style="margin-top:8px">
+            <div class="section-title">WebRTC Leak</div>
+            <div id="webrtcResult" class="small">Not run yet.</div>
+
+            <div style="margin-top:10px" class="section-title">DNS (DoH) results</div>
+            <ul id="dnsResults" class="list small"><li>No test yet.</li></ul>
+
+            <div style="margin-top:10px" class="section-title">Storage / Evercookie</div>
+            <ul id="storageResults" class="list small"><li>Not run yet.</li></ul>
+
+            <div style="margin-top:10px" class="section-title">Port scan (best-effort)</div>
+            <div id="portResults" class="small">Not run yet. (Note: browser has severe limits; results are best-effort)</div>
+          </div>
+        </section>
+
+        <section class="card" style="margin-top:12px">
+          <div class="section-title">Browser Fingerprint & Navigator</div>
+          <div class="field"><div class="fkey">User Agent</div><div class="fval" id="uaVal"></div></div>
+          <div class="field"><div class="fkey">Platform</div><div class="fval" id="platformVal"></div></div>
+          <div class="field"><div class="fkey">Language(s)</div><div class="fval" id="langVal"></div></div>
+          <div class="field"><div class="fkey">Cookies enabled</div><div class="fval" id="cookieVal"></div></div>
+          <div class="field"><div class="fkey">Do Not Track</div><div class="fval" id="dntVal"></div></div>
+          <div class="field"><div class="fkey">hardwareConcurrency</div><div class="fval" id="hcVal"></div></div>
+          <div class="field"><div class="fkey">deviceMemory</div><div class="fval" id="dmVal"></div></div>
+          <div class="field"><div class="fkey">Plugins (first)</div><div class="fval" id="pluginsVal"></div></div>
+        </section>
       </div>
 
-      <div class="box" style="width:320px">
-        <div class="small">Generate / Upload Image</div>
-        <div style="margin-top:8px;display:flex;gap:8px">
-          <input id="imgPrompt" placeholder="ইমেজ প্রম্পট" style="flex:1;padding:8px;border-radius:6px;background:#061022;border:1px solid rgba(255,255,255,0.03);color:inherit" />
-          <button id="genImage">Generate</button>
+      <aside>
+        <div class="card">
+          <div class="section-title">Quick Summary</div>
+          <div id="quickSummary" class="small">No data</div>
         </div>
-        <div style="margin-top:8px">
-          <input type="file" id="imageUpload" accept="image/*" />
-          <div id="uploadedPreview"></div>
+
+        <div class="card" style="margin-top:12px">
+          <div class="section-title">Diagnostics Snapshot</div>
+          <div class="field"><div class="fkey">Screen</div><div class="fval" id="screenVal"></div></div>
+          <div class="field"><div class="fkey">Timezone (browser)</div><div class="fval" id="browserTZ"></div></div>
+          <div class="field"><div class="fkey">System time (local)</div><div class="fval" id="localTime"></div></div>
         </div>
-      </div>
+
+        <div class="card" style="margin-top:12px">
+          <div class="section-title">Notes & Limitations</div>
+          <ul class="list small">
+            <li>Browser-based tests are **best-effort**; extensions/VPNs change results.</li>
+            <li>True port scanning / WHOIS depth needs server-side tools.</li>
+            <li>DNS/DoH checks use public DoH endpoints (Google, Cloudflare).</li>
+          </ul>
+        </div>
+      </aside>
     </div>
 
-    <div class="chat box">
-      <div id="messages" style="display:flex;flex-direction:column"></div>
-    </div>
-
-    <div style="display:flex;gap:12px;margin-top:12px;align-items:flex-end">
-      <div style="flex:1">
-        <textarea id="userInput" placeholder="এখানে লিখুন... (Shift+Enter = newline)"></textarea>
-        <div class="files-list" id="filesList"></div>
-      </div>
-      <div style="width:160px;display:flex;flex-direction:column;gap:8px">
-        <input type="file" id="fileUpload" multiple />
-        <button id="sendBtn">Send</button>
-        <button id="clearBtn" class="muted-btn">Clear chat</button>
-      </div>
-    </div>
-
-    <footer>
-      <div class="small">Tip: server proxy required for API key security</div>
-    </footer>
+    <footer>Built with ❤️ using <span class="badge">ipwho.is</span> • For extended WHOIS/RDAP or server-side port scanning, I can add a backend integration.</footer>
   </div>
 
 <script>
-// default endpoint points to local proxy
-document.getElementById('apiEndpoint').value = window.location.origin + '/api';
+/* ---------- helpers ---------- */
+const el = id => document.getElementById(id);
+const setText = (id, txt) => { const e = el(id); if(e) e.textContent = (txt ?? '—'); };
 
-function el(id){return document.getElementById(id)}
-const messagesEl = el('messages');
-const filesListEl = el('filesList');
-let attachedFiles = [];
-
-function addMessage(text, who='bot', meta=''){
-  const d = document.createElement('div');
-  d.className = 'msg ' + (who==='user' ? 'user' : 'bot');
-  d.innerHTML = text + (meta?`<div class="small" style="margin-top:6px">${meta}</div>`:'');
-  messagesEl.appendChild(d);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
+/* ---------- init navigator snapshot ---------- */
+function snapNavigator() {
+  setText('uaVal', navigator.userAgent || '—');
+  setText('platformVal', navigator.platform || '—');
+  setText('langVal', (navigator.languages && navigator.languages.join(', ')) || navigator.language || '—');
+  setText('cookieVal', navigator.cookieEnabled ? 'Yes' : 'No');
+  setText('dntVal', navigator.doNotTrack || '—');
+  setText('hcVal', navigator.hardwareConcurrency || '—');
+  setText('dmVal', navigator.deviceMemory || '—');
+  try {
+    const p = navigator.plugins ? Array.from(navigator.plugins).slice(0,6).map(x=>x.name).join(', ') : '—';
+    setText('pluginsVal', p);
+  } catch(e) { setText('pluginsVal', '—'); }
+  setText('screenVal', `${screen.width} x ${screen.height} (avail ${screen.availWidth} x ${screen.availHeight})`);
+  setText('browserTZ', Intl.DateTimeFormat().resolvedOptions().timeZone || '(unknown)');
+  setText('localTime', new Date().toString());
 }
+snapNavigator();
 
-el('fileUpload').addEventListener('change', e=>{
-  const files = Array.from(e.target.files);
-  for(const f of files){
-    attachedFiles.push(f);
-    const item = document.createElement('div'); item.className='file-item';
-    item.textContent = f.name + ' ('+Math.round(f.size/1024)+' KB)';
-    filesListEl.appendChild(item);
-  }
-});
-
-el('imageUpload').addEventListener('change', async e=>{
-  const f = e.target.files[0]; if(!f) return;
-  const url = URL.createObjectURL(f);
-  el('uploadedPreview').innerHTML = `<img src="${url}" class="img-preview" />`;
-  attachedFiles.push(f);
-  const item = document.createElement('div'); item.className='file-item'; item.textContent = f.name + ' (image)'; filesListEl.appendChild(item);
-});
-
-async function sendMessage(){
-  const text = el('userInput').value.trim();
-  if(!text && attachedFiles.length===0) return;
-  addMessage(escapeHtml(text||'(file)'),'user');
-  el('userInput').value='';
-
-  const endpoint = el('apiEndpoint').value;
-  if(!endpoint){ addMessage('<span class="small">Error: API Endpoint নেই</span>','bot'); return; }
-
-  try{
-    if(attachedFiles.length>0){
-      const fd = new FormData();
-      fd.append('message', text);
-      attachedFiles.forEach((f,i)=> fd.append('file'+i, f));
-      const resp = await fetch(endpoint + '/upload', {method:'POST', body: fd});
-      const data = await resp.json();
-      addMessage(escapeHtml(JSON.stringify(data).slice(0,200)),'bot','(response preview)');
-      attachedFiles=[]; filesListEl.innerHTML='';
-    } else {
-      const body = {message:text}
-      const resp = await fetch(endpoint + '/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
-      const data = await resp.json();
-      const reply = typeof data==='string'?data:(data.reply||JSON.stringify(data));
-      addMessage(escapeHtml(reply),'bot');
+/* ---------- fetch ipwho.is ---------- */
+async function lookupIP(ip='') {
+  el('status').textContent = 'Fetching ipwho.is ...';
+  try {
+    const url = ip ? `https://ipwho.is/${encodeURIComponent(ip)}` : 'https://ipwho.is/';
+    const r = await fetch(url);
+    const json = await r.json();
+    if(!json || json.success===false) {
+      el('status').textContent = 'ipwho.is: '+(json && json.message ? json.message : 'No data');
+      return;
     }
-  }catch(err){ addMessage('<span class="small">Error: '+escapeHtml(err.message)+'</span>','bot'); }
+    el('status').textContent = 'Lookup successful';
+    el('ipDetails').style.display = 'block';
+    setText('ipVal', json.ip || '—');
+    setText('hostnameVal', json.hostname || '—');
+    setText('ispVal', (json.connection && json.connection.isp) || json.org || json.isp || '—');
+    setText('asnVal', json.asn || (json.connection && json.connection.asn) || '—');
+    // ipwho.is sometimes gives range field or not; if not, we show placeholder
+    setText('rangeVal', json.range || '—');
+    setText('countryVal', `${json.country || '—'} (${json.country_code || ''})`);
+    setText('regionVal', `${json.region || '—'}, ${json.city || '—'}`);
+    setText('zipVal', json.postal || '—');
+    setText('latlonVal', (json.latitude && json.longitude) ? `${json.latitude} / ${json.longitude}` : '—');
+    setText('tzVal', (json.timezone && json.timezone.id) ? `${json.timezone.id} (${json.timezone.utc || ''})` : '—');
+    setText('sysTime', new Date().toString());
+    // Quick summary
+    el('quickSummary').innerHTML = `<div class="pill">${json.ip} — ${json.country || '—'} — ${json.connection?.isp || json.isp || '—'}</div>`;
+    // Raw JSON
+    el('rawJson').textContent = JSON.stringify(json, null, 2);
+    el('rawJson').style.display = 'none';
+    // map
+    if(json.latitude && json.longitude) {
+      const lat = json.latitude, lon = json.longitude;
+      el('mapWrap').innerHTML = '<iframe class="map" src="https://www.openstreetmap.org/export/embed.html?bbox='
+        + (lon-0.05) + '%2C' + (lat-0.03) + '%2C' + (lon+0.05) + '%2C' + (lat+0.03) + '&layer=mapnik&marker=' + lat + '%2C' + lon + '"></iframe>';
+    } else {
+      el('mapWrap').innerHTML = '<div class="small">No coordinates available to render map.</div>';
+    }
+  } catch (e) {
+    el('status').textContent = 'Lookup failed: ' + e;
+  }
 }
 
-el('sendBtn').addEventListener('click', sendMessage);
-el('clearBtn').addEventListener('click', ()=>{messagesEl.innerHTML=''; filesListEl.innerHTML=''; attachedFiles=[]});
-el('userInput').addEventListener('keydown', e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
+/* ---------- WebRTC leak test ---------- */
+async function runWebRTC() {
+  const out = el('webrtcResult');
+  out.textContent = 'Running WebRTC... (gathering ICE candidates)';
+  const ips = new Set();
+  try {
+    // cross-browser compatible
+    const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+    if(!RTCPeerConnection) {
+      out.innerHTML = '<span class="danger">WebRTC not supported in this browser.</span>';
+      return;
+    }
+    const pc = new RTCPeerConnection({iceServers:[]});
+    pc.createDataChannel('');
+    pc.onicecandidate = (evt) => {
+      if(!evt || !evt.candidate) return;
+      const s = evt.candidate.candidate || '';
+      const m = s.match(/([0-9]{1,3}(?:\\.[0-9]{1,3}){3})/g);
+      if(m) m.forEach(ip=>ips.add(ip));
+      out.textContent = 'Detected IP(s): ' + Array.from(ips).join(', ');
+    };
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    // wait a bit
+    setTimeout(()=>{ try{ pc.close(); }catch(e){}; if(ips.size===0) out.textContent='No IPs detected (or blocked by browser/VPN/extensions)'; }, 2500);
+  } catch(e) {
+    out.innerHTML = '<span class="danger">Error running WebRTC test: '+e+'</span>';
+  }
+}
 
-el('genImage').addEventListener('click', async ()=>{
-  const prompt = el('imgPrompt').value.trim(); if(!prompt) return;
-  addMessage('Generating image for: '+escapeHtml(prompt),'user');
-  const endpoint = el('apiEndpoint').value;
+/* ---------- DNS (DoH) test ---------- */
+async function runDoH() {
+  const list = el('dnsResults');
+  list.innerHTML = '<li class="small">Running DNS-over-HTTPS queries...</li>';
+  const endpoints = [
+    {name:'Google DoH', url:'https://dns.google/resolve?name=example.com&type=A'},
+    {name:'Cloudflare DoH', url:'https://cloudflare-dns.com/dns-query?name=example.com&type=A'}
+  ];
+  const results = [];
+  for(const ep of endpoints){
+    try{
+      const r = await fetch(ep.url, {headers:{'Accept':'application/dns-json'}}); // CORS: these endpoints allow
+      const j = await r.json();
+      const ans = (j.Answer && j.Answer.length) ? j.Answer.map(a=>a.data).slice(0,4).join(', ') : '(no answers)';
+      results.push(`<li><strong>${ep.name}</strong>: ${ans}</li>`);
+    } catch(e) {
+      results.push(`<li class="danger"><strong>${ep.name}</strong>: failed (${e})</li>`);
+    }
+  }
+  list.innerHTML = results.join('');
+}
+
+/* ---------- Evercookie-style storage test ---------- */
+async function runStorageTests(){
+  const ul = el('storageResults');
+  ul.innerHTML = '<li>Running tests...</li>';
+  const out = [];
+  // cookie
+  try{ document.cookie = 'echk=1; max-age=31536000; path=/'; out.push(`<li>Cookie: ${document.cookie.includes('echk=1')?'Present':'Missing'}</li>`); } catch(e){ out.push(`<li>Cookie: error</li>`); }
+  // localStorage
+  try{ localStorage.setItem('echk','1'); out.push(`<li>localStorage: ${localStorage.getItem('echk')==='1'?'Present':'Missing'}</li>`); }catch(e){ out.push(`<li>localStorage: blocked</li>`); }
+  // sessionStorage
+  try{ sessionStorage.setItem('echk','1'); out.push(`<li>sessionStorage: ${sessionStorage.getItem('echk')==='1'?'Present':'Missing'}</li>`); }catch(e){ out.push(`<li>sessionStorage: blocked</li>`); }
+  // indexedDB
   try{
-    const resp = await fetch(endpoint + '/generate-image', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prompt})});
-    const data = await resp.json();
-    if(data.image_url){ addMessage(`<div><img src="${data.image_url}" class="img-preview" /></div>`,'bot'); }
-    else if(data.image_base64){ addMessage(`<div><img src="data:image/png;base64,${data.image_base64}" class="img-preview" /></div>`,'bot'); }
-    else{ addMessage('<span class="small">No image returned</span>','bot'); }
-  }catch(err){ addMessage('<span class="small">Generation error: '+escapeHtml(err.message)+'</span>','bot'); }
+    const req = indexedDB.open('echk_db',1);
+    req.onupgradeneeded = e => { const db = e.target.result; if(!db.objectStoreNames.contains('s')) db.createObjectStore('s'); };
+    req.onsuccess = e => {
+      const db = e.target.result;
+      const tx = db.transaction('s','readwrite'); const s = tx.objectStore('s'); s.put('1','echk');
+      tx.oncomplete = ()=>{
+        const tx2 = db.transaction('s','readonly'); const s2 = tx2.objectStore('s'); const get = s2.get('echk');
+        get.onsuccess = ()=>{ out.push(`<li>indexedDB: ${(get.result==='1')?'Present':'Missing'}</li>`); ul.innerHTML = out.join(''); db.close(); };
+      };
+    };
+    req.onerror = ()=>{ out.push(`<li>indexedDB: error/blocked</li>`); ul.innerHTML = out.join(''); };
+  }catch(e){ out.push(`<li>indexedDB: error</li>`); ul.innerHTML = out.join(''); }
+  // caches
+  try{ if('caches' in window){ await caches.open('echk_cache').then(c=>c.put('/echk.txt', new Response('1'))); out.push(`<li>CacheStorage: present (local)</li>`);} else out.push(`<li>CacheStorage: not supported</li>`);}catch(e){ out.push(`<li>CacheStorage: blocked/error</li>`); }
+  // WebSQL try (deprecated)
+  try{ if(window.openDatabase){ const db = openDatabase('echk','1.0','echk',2*1024*1024); db.transaction(tx=>{ tx.executeSql('CREATE TABLE IF NOT EXISTS s (k text, v text)'); tx.executeSql('INSERT INTO s (k,v) VALUES (?,?)',['echk','1']); tx.executeSql('SELECT v FROM s WHERE k=?',['echk'], (t,r)=>{ out.push(`<li>WebSQL: ${r.rows.length>0?'Present':'Missing'}</li>`); ul.innerHTML = out.join(''); }); }); } else { out.push(`<li>WebSQL: not supported</li>`); } }catch(e){ out.push(`<li>WebSQL: error</li>`); }
+  // update ui
+  ul.innerHTML = out.join('') + (ul.innerHTML?'':'<li>Checking indexedDB...</li>');
+}
+
+/* ---------- Port scan (very limited) ---------- */
+async function tryPort(ip, port, timeout=3000) {
+  // Try loading favicon over https then http using Image.onload/onerror
+  return new Promise(resolve=>{
+    const protocols = ['https','http'];
+    let i = 0, done=false;
+    const tryProto = (p)=>{
+      const img = new Image();
+      const url = `${p}://${ip}:${port}/favicon.ico`;
+      const t = setTimeout(()=>{ if(!done){ done=true; resolve({port, state:'timeout/filtered'}); } }, timeout);
+      img.onload = ()=>{ if(!done){ done=true; clearTimeout(t); resolve({port, state:'open (image loaded)', proto:p}); } };
+      img.onerror = ()=>{ i++; clearTimeout(t); if(i>=protocols.length && !done){ done=true; resolve({port, state:'closed/filtered'}); } else if(!done) tryProto(protocols[i]); };
+      try{ img.src = url + '?_='+Date.now(); } catch(e){ if(!done){ done=true; resolve({port, state:'error'}); } }
+    };
+    tryProto(protocols[i]);
+  });
+}
+
+async function runPortScan(){
+  const txt = el('portResults');
+  const ip = el('ipInput').value.trim() || (el('ipVal') && el('ipVal').textContent!=='—' ? el('ipVal').textContent : null);
+  if(!ip){ txt.textContent = 'No target IP known. Run Lookup or provide IP.'; return; }
+  txt.textContent = 'Scanning common ports (80,443,8080,8443,22,21,3389) — this is very limited...';
+  const ports = [80,443,8080,8443,22,21,3389];
+  const results = [];
+  for(const p of ports){
+    const r = await tryPort(ip,p,2500);
+    results.push(r);
+    txt.innerHTML = results.map(rr=>`Port ${rr.port}: ${rr.state}${rr.proto? ' ('+rr.proto+')':''}`).join('<br>');
+  }
+}
+
+/* ---------- wire UI ---------- */
+el('lookupBtn').addEventListener('click', ()=> lookupIP(el('ipInput').value.trim()));
+el('myIpBtn').addEventListener('click', ()=> { el('ipInput').value=''; lookupIP(); });
+el('webrtcBtn').addEventListener('click', runWebRTC);
+el('dnsBtn').addEventListener('click', runDoH);
+el('storageBtn').addEventListener('click', runStorageTests);
+el('portBtn').addEventListener('click', runPortScan);
+el('rawBtn').addEventListener('click', ()=>{
+  const r = el('rawJson'); r.style.display = (r.style.display==='none' || r.style.display==='') ? 'block' : 'none';
 });
 
-function escapeHtml(s){if(!s) return ''; return String(s).replace(/[&<>"]+/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
-</script>
+/* show quick initial */
+setText('status','Ready — press Lookup or My IP.');
 
+/* optional: auto-run lookup on load (uncomment if you want) */
+// lookupIP();
+</script>
 </body>
 </html>
