@@ -1,244 +1,175 @@
 <!doctype html>
 <html lang="bn">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Multi-Camera Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#9aa4b2;--glass:rgba(255,255,255,0.04)}
-    *{box-sizing:border-box;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
-    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#071028 0%, #07172a 60%);color:#e6eef6}
-    header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px}
-    .brand{display:flex;gap:12px;align-items:center}
-    .logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:700}
-    h1{margin:0;font-size:18px}
-    p.lead{margin:0;color:var(--muted);font-size:13px}
-    .container{padding:18px;max-width:1200px;margin:0 auto}
-    .panel{background:var(--card);border-radius:12px;padding:14px;backdrop-filter:blur(6px);box-shadow:0 6px 18px rgba(2,6,23,0.6)}
-    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
-    select,input[type=range]{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:inherit}
-    button.btn{background:var(--accent);border:none;padding:9px 12px;border-radius:10px;color:white;font-weight:600;cursor:pointer}
-    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:var(--muted);cursor:pointer}
-    .devices{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .devices button{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:var(--muted);cursor:pointer}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:16px}
-    .tile{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:10px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,0.03)}
-    video{width:100%;height:220px;object-fit:cover;background:#000}
-    .tile .meta{display:flex;align-items:center;justify-content:space-between;padding:10px}
-    .meta .title{font-weight:600}
-    .tile .actions{display:flex;gap:8px}
-    .small{font-size:12px;color:var(--muted)}
-    .snapshot-img{max-width:100%;display:block;margin-top:8px;border-radius:6px}
-    /* responsive */
-    @media (max-width:600px){.brand h1{font-size:16px}.logo{width:44px;height:44px}}
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>MegaPersonals — PIN verification (clone)</title>
+
+<!-- Use system fonts for similar look; you can add Google fonts if you prefer -->
+<style>
+  :root{
+    --bg:#6d6f78;               /* outer background tint (matches screenshot dark) */
+    --card-bg: #f5efe9;         /* light warm card background like screenshot */
+    --accent-orange: #d97e40;   /* main orange */
+    --accent-blue: #3aa6d7;     /* secondary blue for 'Personals' */
+    --text-dark: #9b5b3a;       /* brownish text color */
+    --muted: #b3a79e;
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.04), transparent 8%),
+                linear-gradient(180deg, rgba(55,60,70,0.95), rgba(30,32,36,0.95));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family: "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  }
+
+  /* container dims to mimic screenshot proportions */
+  .popup-wrap{
+    width:640px;
+    max-width:94vw;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+
+  .card{
+    width:100%;
+    background: var(--card-bg);
+    border-radius:10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    padding:28px 26px 22px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* logo at top center (like screenshot) */
+  .logo{
+    display:block;
+    margin: -22px auto 8px;    /* lift logo slightly into card top */
+    width:360px;
+    max-width:86%;
+    height:auto;
+    object-fit:contain;
+  }
+
+  /* brand text parted into two colors (if you want text instead of image) */
+  .brand{
+    font-size:34px;
+    font-weight:800;
+    margin:6px 0 8px;
+    letter-spacing:0.4px;
+  }
+  .brand .mega{ color: var(--accent-orange); }
+  .brand .personals{ color: var(--accent-blue); margin-left:8px; }
+
+  /* main message text */
+  .message{
+    color: var(--text-dark);
+    font-size:20px;
+    line-height:1.45;
+    margin:10px 24px 18px;
+    font-weight:600;
+  }
+
+  /* keep the emphasized words larger */
+  .message strong{
+    font-weight:800;
+    font-size:20px;
+  }
+
+  /* OK button style (large rounded) */
+  .actions{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    margin-top:12px;
+  }
+
+  .btn {
+    display:inline-block;
+    min-width:110px;
+    padding:10px 28px;
+    border-radius:8px;
+    border: none;
+    background: linear-gradient(180deg, var(--accent-orange), #c86f34);
+    color: #fff;
+    font-weight:800;
+    font-size:16px;
+    cursor:pointer;
+    box-shadow: 0 8px 18px rgba(217,126,64,0.22);
+  }
+  .btn:active{ transform: translateY(1px); }
+
+  /* small subtle grain like the screenshot (decorative) */
+  .grain {
+    pointer-events:none;
+    position:absolute;
+    inset:0;
+    background-image: radial-gradient(rgba(0,0,0,0.03) 1px, transparent 1px);
+    background-size: 18px 18px;
+    opacity: 0.28;
+    mix-blend-mode: multiply;
+  }
+
+  /* responsive: keep proportions on small screens */
+  @media (max-width:520px){
+    .card{ padding:18px; }
+    .logo{ width:260px; margin-top:-14px; }
+    .message{ font-size:16px; }
+    .brand{ font-size:22px; }
+    .btn{ min-width:90px; padding:10px 18px; font-size:15px; }
+  }
+</style>
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <div class="logo">CAM</div>
-      <div>
-        <h1>Multi‑Camera Dashboard</h1>
-        <p class="lead">লোকাল ক্যামেরা অ্যাক্সেস, ডায়নামিক গ্রিড এবং সহজ কন্ট্রোলস — নিরাপদ ও HTTPS দরকার</p>
-      </div>
-    </div>
-    <div>
-      <button id="helpBtn" class="ghost">সহায়তা</button>
-    </div>
-  </header>
 
-  <main class="container">
-    <div class="panel">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <div style="flex:1;min-width:260px">
-          <label class="small">ভিডিও রেজল্যুশন</label>
-          <select id="resolution">
-            <option value="default">Default</option>
-            <option value="hd">1280x720 (HD)</option>
-            <option value="fhd">1920x1080 (FHD)</option>
-            <option value="vga">640x480 (VGA)</option>
-          </select>
-        </div>
-        <div style="flex:1;min-width:200px">
-          <label class="small">স্ট্রিম টাইমআউট (সেকেন্ড)</label>
-          <input id="timeout" type="range" min="5" max="60" value="30">
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button id="refreshList" class="btn">ডিভাইস রিফ্রেশ</button>
-          <button id="startAll" class="btn">সব চালু করুন</button>
-          <button id="stopAll" class="ghost">সব বন্ধ করুন</button>
-        </div>
+  <div class="popup-wrap" role="dialog" aria-modal="true" aria-labelledby="meg-title">
+    <div class="card">
+      <!-- grain overlay to imitate scanned/dusty look -->
+      <div class="grain" aria-hidden="true"></div>
+
+      <!-- replace the src below if needed -->
+      <img class="logo" src="https://res.cloudinary.com/dcwksfimq/image/upload/v1761241625/megapersonalsPageHeader_eyvfbq.png" alt="MegaPersonals logo">
+
+      <!-- If you prefer pure text title instead of image, uncomment next block and hide image -->
+      <!--
+      <div class="brand"><span class="mega">Mega</span><span class="personals">Personals</span></div>
+      -->
+
+      <div id="meg-title" class="message" role="document">
+        <p style="margin:0 0 8px;"><strong>To fight scams and doxing</strong></p>
+        <p style="margin:0;">we now send <strong>PIN codes</strong> to confirm ownership of phone numbers used in posts.</p>
       </div>
 
-      <div class="devices" id="devices"></div>
-
-      <div class="grid" id="grid"></div>
-
-      <div style="margin-top:10px;color:var(--muted);font-size:13px">নোট: ব্রাউজার ক্যামেরা পারমিশন চাইবে। এই পেজটি HTTPS-এ হোস্ট করা থাকতে হবে অথবা লোকালহোস্ট হলে কাজ করবে। একসাথে একাধিক স্ট্রিম চালালে সিস্টেম ধীর হতে পারে।</div>
+      <div class="actions" role="group" aria-label="dialog actions">
+        <button class="btn" id="okBtn" aria-label="OK">OK</button>
+      </div>
     </div>
-  </main>
+  </div>
 
-  <script>
-    // Basic multi-camera dashboard
-    const devicesEl = document.getElementById('devices');
-    const grid = document.getElementById('grid');
-    const refreshList = document.getElementById('refreshList');
-    const startAll = document.getElementById('startAll');
-    const stopAll = document.getElementById('stopAll');
-    const resolution = document.getElementById('resolution');
-    const timeout = document.getElementById('timeout');
+<script>
+  // simple behavior: close card when OK clicked or Esc pressed
+  (function(){
+    const ok = document.getElementById('okBtn');
+    const card = document.querySelector('.popup-wrap');
 
-    // keep track of active streams
-    const active = new Map(); // deviceId -> {stream, el, recorder, chunks}
-
-    async function enumerate() {
-      devicesEl.innerHTML = '';
-      try {
-        // ask for permissions silently if not granted (some browsers need getUserMedia first)
-        await navigator.mediaDevices.getUserMedia({video:true, audio:false}).catch(()=>{});
-      } catch(e){/* ignore */}
-      const list = await navigator.mediaDevices.enumerateDevices();
-      const cams = list.filter(d => d.kind === 'videoinput');
-      if (cams.length === 0) {
-        devicesEl.innerHTML = '<div class="small">কোনো ভিডিও ডিভাইস পাওয়া যায়নি। ফোনে হলে ফ্রন্ট/রিয়ার ক্যামেরা অন করুন অথবা ক্যামেরা প্লাগ করুন।</div>';
-        return;
-      }
-      cams.forEach(d=>{
-        const btn = document.createElement('button');
-        btn.textContent = d.label || `Camera • ${d.deviceId.slice(-4)}`;
-        btn.title = d.label || d.deviceId;
-        btn.onclick = () => toggleCamera(d.deviceId, d.label || btn.textContent);
-        devicesEl.appendChild(btn);
-      });
-    }
-
-    function getConstraints(deviceId){
-      const res = resolution.value;
-      let constraints = {video: {deviceId: {exact: deviceId}}};
-      if (res === 'hd') constraints.video.width = {ideal:1280}, constraints.video.height = {ideal:720};
-      if (res === 'fhd') constraints.video.width = {ideal:1920}, constraints.video.height = {ideal:1080};
-      if (res === 'vga') constraints.video.width = {ideal:640}, constraints.video.height = {ideal:480};
-      return constraints;
-    }
-
-    async function toggleCamera(deviceId, label){
-      if (active.has(deviceId)) return stopCamera(deviceId);
-      try{
-        const stream = await navigator.mediaDevices.getUserMedia(getConstraints(deviceId));
-        addTile(deviceId, label, stream);
-      }catch(err){
-        alert('ক্যামেরা শুরু করতে সমস্যা: ' + (err.message || err));
-        console.error(err);
-      }
-    }
-
-    function addTile(deviceId, label, stream){
-      const wrap = document.createElement('div'); wrap.className='tile panel';
-      const video = document.createElement('video'); video.autoplay = true; video.playsInline = true; video.srcObject = stream;
-      const meta = document.createElement('div'); meta.className='meta';
-      const left = document.createElement('div'); left.innerHTML = `<div class="title">${escapeHtml(label)}</div><div class="small">id: ${deviceId.slice(-6)}</div>`;
-      const actions = document.createElement('div'); actions.className='actions';
-
-      const snap = document.createElement('button'); snap.className='ghost'; snap.textContent='Snapshot';
-      const rec = document.createElement('button'); rec.className='ghost'; rec.textContent='Record';
-      const full = document.createElement('button'); full.className='ghost'; full.textContent='Fullscreen';
-      const stop = document.createElement('button'); stop.className='ghost'; stop.textContent='Stop';
-
-      actions.appendChild(snap); actions.appendChild(rec); actions.appendChild(full); actions.appendChild(stop);
-      meta.appendChild(left); meta.appendChild(actions);
-
-      wrap.appendChild(video); wrap.appendChild(meta);
-      grid.prepend(wrap);
-
-      const info = {stream, el:wrap, video, recorder:null, chunks:[], timer:null};
-      active.set(deviceId, info);
-
-      // auto timeout to stop stream if set
-      function resetTimer(){
-        if (info.timer) clearTimeout(info.timer);
-        const t = parseInt(timeout.value,10) * 1000;
-        info.timer = setTimeout(()=>{ stopCamera(deviceId); }, t);
-      }
-      resetTimer();
-      video.addEventListener('mousemove', resetTimer);
-      video.addEventListener('play', resetTimer);
-
-      snap.onclick = ()=>{
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth || 1280; canvas.height = video.videoHeight || 720;
-        const ctx = canvas.getContext('2d'); ctx.drawImage(video,0,0,canvas.width,canvas.height);
-        const url = canvas.toDataURL('image/png');
-        const a = document.createElement('a'); a.href=url; a.download = `${label.replace(/\s+/g,'_')}_snapshot.png`; a.click();
-      };
-
-      rec.onclick = ()=>{
-        if (!info.recorder){
-          try{
-            const mr = new MediaRecorder(stream, {mimeType:'video/webm;codecs=vp9'});
-            mr.ondataavailable = e => { if (e.data && e.data.size) info.chunks.push(e.data); };
-            mr.onstop = ()=>{
-              const blob = new Blob(info.chunks, {type:'video/webm'});
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a'); a.href=url; a.download = `${label.replace(/\s+/g,'_')}_record.webm`; a.click();
-              info.chunks = [];
-              info.recorder = null; rec.textContent='Record';
-            };
-            mr.start();
-            info.recorder = mr; rec.textContent='Stop Rec';
-          }catch(e){ alert('Recording not supported: '+e.message); }
-        } else {
-          info.recorder.stop();
-        }
-      };
-
-      full.onclick = ()=>{
-        if (wrap.requestFullscreen) wrap.requestFullscreen(); else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
-      };
-
-      stop.onclick = ()=> stopCamera(deviceId);
-
-      // when stream ends externally
-      stream.getVideoTracks().forEach(t=> t.onended = ()=> stopCamera(deviceId));
-    }
-
-    function stopCamera(deviceId){
-      const info = active.get(deviceId);
-      if (!info) return;
-      // stop recorder
-      if (info.recorder && info.recorder.state !== 'inactive') info.recorder.stop();
-      // stop tracks
-      info.stream.getTracks().forEach(t=> t.stop());
-      // remove element
-      info.el.remove();
-      if (info.timer) clearTimeout(info.timer);
-      active.delete(deviceId);
-    }
-
-    // controls
-    refreshList.addEventListener('click', enumerate);
-    startAll.addEventListener('click', async ()=>{
-      const list = await navigator.mediaDevices.enumerateDevices();
-      const cams = list.filter(d=>d.kind==='videoinput');
-      for (const c of cams) {
-        if (!active.has(c.deviceId)) await toggleCamera(c.deviceId, c.label || `Camera ${c.deviceId.slice(-4)}`);
-      }
+    ok.addEventListener('click', () => {
+      card.style.display = 'none';
     });
-    stopAll.addEventListener('click', ()=>{ Array.from(active.keys()).forEach(k=>stopCamera(k)); });
 
-    // helper: escape
-    function escapeHtml(s){ return s.replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-
-    // init
-    enumerate();
-
-    // help button
-    document.getElementById('helpBtn').addEventListener('click', ()=>{
-      alert('কীভাবে ব্যবহার করবেন:\n1) প্রথমে "ডিভাইস রিফ্রেশ" ক্লিক করুন।\n2) প্রতিটি ক্যামেরা বাটনে ক্লিক করে চালু করুন।\n3) প্রতিটি টাইল থেকে Snapshot, Record (webm) বা Fullscreen ব্যবহার করুন।\n
-নোট: এই পেজটি HTTPS-এ থাকতে হবে। RTSP/IP ক্যামেরা দেখাতে হলে সার্ভার ব্যবহার করে WebRTC/HLS কনভার্সন দরকার।');
+    document.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape') card.style.display = 'none';
     });
-  </script>
+
+    // focus management
+    ok.focus();
+  })();
+</script>
 </body>
 </html>
